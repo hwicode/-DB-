@@ -15,10 +15,9 @@ public class ChatController {
     private final ChatRepository chatRepository;
 
     @CrossOrigin
-    @GetMapping(value = "/sender/{sender}/receiver/{receiver}",
-            produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<Chat> getMsg(@PathVariable("sender") String sender, @PathVariable("receiver") String receiver) {
-        return chatRepository.findBySender(sender, receiver);
+    @GetMapping(value = "/chat/roomNum/{roomNum}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<Chat> findByRoomNum(@PathVariable("roomNum") Integer roomNum){
+        return chatRepository.findByRoomNum(roomNum);
     }
 
     @CrossOrigin
