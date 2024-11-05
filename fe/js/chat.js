@@ -1,9 +1,71 @@
+let username = prompt("아이디를 입력하세요: ");
+let roomNum = prompt("채팅방 번호를 입력 하세요: ")
+
+document.querySelector("#userName").innerHTML = username;
+document.querySelector("#roomNum").innerHTML = roomNum;
+
+const eventSource = new EventSource(`http://localhost:8080/chat/roomNum/${roomNum}`);
+eventSource.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if(data.sender === username){ //로그인 유저시 파란박스
+        initMyMessage(data);
+    } else {
+        initYourMessage(data);//다른 유저 회색박스
+    }
+}
+
+function initMyMessage(data){
+    const chatBox = document.querySelector("#chat-box");
+
+    const chatOutgoingBox = document.createElement("div");
+    chatOutgoingBox.className = "outgoing_msg";
+
+    chatOutgoingBox.innerHTML = getSendMsgBox(data);
+    chatBox.append(chatOutgoingBox);
+
+    document.documentElement.scrollTop=document.body.scrollHeight;
+}
+
+function initYourMessage(data){
+    let chatBox = document.querySelector("#chat-box");
+
+    let receivedBox = document.createElement("div");
+    receivedBox.className = "received_msg";
+
+    receivedBox.innerHTML = getReceiveMsgBox(data);
+    chatBox.append(receivedBox);
+
+    document.documentElement.scrollTop=document.body.scrollHeight;
+}
+
+function getSendMsgBox(data){
+    return `<div class="sent_msg">
+    <p>${data.msg}</p>
+    <span class="time_date"> ${getConvertTime(data.createdAt)}</span>
+  </div>`;
+}
+
+function getReceiveMsgBox(data){  
+    return `<div class="received_withd_msg">
+    <p>${data.msg}</p>
+    <span class="time_date"> ${getConvertTime(data.createdAt)}/<b>${data.sender}</b></span>
+  </div>`;
+}
+
+function getConvertTime(time) {
+    const year = time.substring(0, 5);
+    const md = time.substring(5, 10);
+    const tm = time.substring(11, 16);
+    return tm + " | " + year + md;
+}
+
+
 async function addMessage() {
     const msgInput = document.querySelector("#chat-outgoing-msg");
 
     const chat = {
-        sender: "ssar",
-        receiver: "cos",
+        sender: username,
+        roomNum: roomNum,
         msg: msgInput.value
     };
     msgInput.value = "";
@@ -27,30 +89,3 @@ document.querySelector("#chat-outgoing-msg").addEventListener("keydown", (e)=>{
         addMessage();
     }
 })
-
-function getSendMsgBox(msg, time){
-    return `<div class="sent_msg">
-    <p>${msg}</p>
-    <span class="time_date"> ${time}</span>
-  </div>`;
-}
-
-function initMessage(data){
-    const year = data.createdAt.substring(0, 5);
-    const md = data.createdAt.substring(5, 10);
-    const tm = data.createdAt.substring(11, 16);
-    const convertTime = tm + " | " + year + md;
-
-    const chatOutgoingBox = document.createElement("div");
-    chatOutgoingBox.className = "outgoing_msg";
-    chatOutgoingBox.innerHTML = getSendMsgBox(data.msg, convertTime);
-
-    const chatBox = document.querySelector("#chat-box");
-    chatBox.append(chatOutgoingBox);
-}
-
-const eventSource = new EventSource("http://localhost:8080/sender/ssar/receiver/cos");
-eventSource.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    initMessage(data);
-}
